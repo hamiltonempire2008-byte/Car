@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hamilton Aurora Motors</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;700&display=swap" rel="stylesheet">
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Montserrat', sans-serif;
+  background: radial-gradient(circle at top, #0a0a0a, #000);
+  color: white;
+  overflow: hidden;
+}
+
+#scene {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+/* HEADER */
+.hero-content {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  top: 20px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+h1 {
+  font-size: 2.2rem;
+  letter-spacing: 3px;
+}
+
+h1 span {
+  color: gold;
+}
+
+p {
+  color: #aaa;
+}
+
+/* SOUND HINT */
+.sound-hint {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 12px 18px;
+  border-radius: 50px;
+  font-size: 14px;
+  color: white;
+  cursor: pointer;
+  z-index: 20;
+  transition: 0.3s;
+}
+
+/* WHATSAPP */
+.whatsapp {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #25D366;
+  padding: 14px 18px;
+  border-radius: 50px;
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  z-index: 20;
+}
+</style>
+</head>
+
+<body>
+
+<div class="hero-content">
+  <h1>HAMILTON <span>AURORA</span> MOTORS</h1>
+  <p>Drag to rotate Bugatti • Click to activate engine sound</p>
+</div>
+
+<div class="sound-hint" id="soundHint">
+🔊 Click anywhere to hear engine ignition
+</div>
+
+<div id="scene"></div>
+
+<a class="whatsapp" href="https://wa.me/2349012947807" target="_blank">
+Chat on WhatsApp
+</a>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
+
+<script>
+let scene = new THREE.Scene();
+
+let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+
+let renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.getElementById("scene").appendChild(renderer.domElement);
+
+/* LIGHTS */
+scene.add(new THREE.DirectionalLight(0xffffff, 1).position.set(5,5,5));
+scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+
+camera.position.z = 6;
+
+/* BUGATTI */
+let car;
+
+new THREE.GLTFLoader().load(
+  "bugatti_veyron_fully_rigged.glb",
+  (gltf) => {
+    car = gltf.scene;
+    car.scale.set(1,1,1);
+    scene.add(car);
+  }
+);
+
+/* DRAG ROTATION */
+let dragging = false;
+let prevX = 0;
+
+window.addEventListener("mousedown", () => dragging = true);
+window.addEventListener("mouseup", () => dragging = false);
+
+window.addEventListener("mousemove", (e) => {
+  if (dragging && car) {
+    let delta = e.clientX - prevX;
+    car.rotation.y += delta * 0.01;
+  }
+  prevX = e.clientX;
+});
+
+/* AUTO SPIN */
+function animate(){
+  requestAnimationFrame(animate);
+  if (car && !dragging) car.rotation.y += 0.002;
+  renderer.render(scene,camera);
+}
+animate();
+
+/* RESIZE */
+window.addEventListener("resize", () => {
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+});
+
+/* ENGINE SOUND (UPDATED FILE) */
+const audio = new Audio("mixkit-car-ignition-1535.wav");
+audio.loop = true;
+audio.volume = 0.6;
+
+const hint = document.getElementById("soundHint");
+
+window.addEventListener("click", () => {
+  audio.play().catch(err => console.log("Audio blocked:", err));
+
+  if (hint) {
+    hint.style.opacity = "0";
+    setTimeout(() => hint.remove(), 500);
+  }
+
+}, { once: true });
+
+</script>
+
+</body>
+</html>
